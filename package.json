@@ -35,7 +35,6 @@
     "url": "https://github.com/circlefin/stablecoin-evm/issues"
   },
   "homepage": "https://github.com/circlefin/stablecoin-evm#readme",
-  "dependencies": {},
   "devDependencies": {
     "@openzeppelin/contracts": "^3.1.0",
     "@truffle/hdwallet-provider": "^1.0.39",
@@ -49,6 +48,7 @@
     "assert-diff": "1.2.6",
     "chai": "^4.2.0",
     "diff": "^4.0.2",
+    "dotenv": "^16.4.5",
     "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-standard": "^14.1.1",
@@ -75,6 +75,7 @@
     "ts-node": "^8.10.2",
     "typechain": "^2.0.0",
     "typescript": "5.1.6",
+    "viem": "^2.7.13",
     "web3": "^1.2.11"
   },
   "engines": {
