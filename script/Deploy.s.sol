@@ -2,13 +2,18 @@
 pragma solidity >=0.6.12;
 
 import "forge-std/Script.sol";
-import "../contracts/v2/FiatTokenV2_2.sol";
+import {FiatTokenV2_2 } from "../contracts/v2/FiatTokenV2_2.sol";
+
+
 
 contract DeployFiatToken is Script {
+    event NewContract(address newContract);
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
-        FiatTokeV2_2 fiatToken = new FiatTokenV2_2();
+        FiatTokenV2_2 fiatToken = new FiatTokenV2_2();
+
+        emit NewContract(address(fiatToken));
         vm.stopBroadcast();
     }
 }
