@@ -21,9 +21,13 @@
 
 # Register in Omnibridge
 
-1.
+1. EURC on Ethereum: `0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c`
 
-EURC on Ethereum: `0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c`
-EURC on Gnosis Chain: `0x6ec10beaf23f70dab3c76789c4e96ea9a0bd5ba7`
+2. Omnibridge owner([0x7a48Dac683DA91e4faa5aB13D91AB5fd170875bd](https://gnosisscan.io/address/0x7a48dac683da91e4faa5ab13d91ab5fd170875bd)) calls Omnibridge setCustomTokenAddressPair(nativeTokenAddress, bridgedTokenAddress) with calldata: `0b71a4a70000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c000000000000000000000000<EURC address on Gnosis Chain>` (replace <EURC address on Gnosis Chain> to the deployed token proxy contract)
 
-2. Omnibridge owner([0x7a48Dac683DA91e4faa5aB13D91AB5fd170875bd](https://gnosisscan.io/address/0x7a48dac683da91e4faa5ab13d91ab5fd170875bd)) calls Omnibridge setCustomTokenAddressPair(nativeTokenAddress, bridgedTokenAddress): `0b71a4a70000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c0000000000000000000000006ec10beaf23f70dab3c76789c4e96ea9a0bd5ba7` (replace `6ec10beaf23f70dab3c76789c4e96ea9a0bd5ba7` to the deployed token proxy contract)
+## Deployment
+
+### Gnosis Chain
+
+1. EURC Token: [0x54E4cB2a4Fa0ee46E3d9A98D13Bea119666E09f6](https://gnosisscan.io/address/0x54e4cb2a4fa0ee46e3d9a98d13bea119666e09f6#code)
+2. EURC Master Minter: [0xb9257660afe39ab09aff1fa29c189330da7a8398](https://gnosisscan.io/address/0xb9257660afe39ab09aff1fa29c189330da7a8398#code)
