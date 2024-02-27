@@ -13,11 +13,11 @@
 3. Deploy `FiatTokenV2_2.sol`: `source .env && forge script script/DeployFiatTokenImplementation.s.sol:DeployFiatToken --rpc-url $GNOSIS_RPC_URL --broadcast  --verify --chain-id 100 --etherscan-api-key=$GNOSISSCAN_API_KEY -vvvv`
 
 4. Due to the openzeppelin contracts version issue, you need to change the `"@openzeppelin/contracts": "^3.1.0"`(default to 3.4.2) to `"@openzeppelin/contracts": "3.1.0"`, in order to compile correctly.
-`
+
 5. Delete `node_modules`  and `out`, then run `yarn install` again.
 6. Update `IMPLEMENTATION` variable in `.env` with the address from step 3.
 7. Deploy `FiatTokenProxy.sol` and `MasterMinter.sol`: `source .env && forge script script/DeployProxyAndMinter.s.sol:DeployProxyAndMinter --rpc-url $GNOSIS_RPC_URL --broadcast  --verify --chain-id 100 --etherscan-api-key=$GNOSISSCAN_API_KEY -vvvv`
-8. Configure worker: `forge script script/SetWorker.s.sol:SetWorker --rpc-url $GNOSIS_RPC_URL --broadcast  --verify --chain-id 100`
+8. Configure worker: `forge script script/SetWorker.s.sol:SetWorker --rpc-url $GNOSIS_RPC_URL --broadcast --chain-id 100`
 
 # Register in Omnibridge
 
