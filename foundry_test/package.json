@@ -1,0 +1,17 @@
+{
+  "name": "foundry_test",
+  "version": "1.0.0",
+  "description": "Testing for EURC on Omnibridge between Ethereum and Gnosis Chain",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "web3": "^1.2.11"
+  }
+}
