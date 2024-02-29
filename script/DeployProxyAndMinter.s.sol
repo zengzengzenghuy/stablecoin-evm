@@ -9,7 +9,6 @@ import {MasterMinter} from "../contracts/minting/MasterMinter.sol";
 
 contract DeployProxyAndMinter is Script {
     event NewContract(address newContract);
-    address THROWAWAY_ADDRESS = 0x0000000000000000000000000000000000000001;
     FiatTokenV2_2 fiatTokenV2_2Proxy;
 
     function run() external {

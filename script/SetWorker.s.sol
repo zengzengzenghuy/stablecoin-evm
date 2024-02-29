@@ -14,9 +14,9 @@ contract SetWorker is Script {
     function run() external {
 
         address worker = vm.envAddress("WORKER");
-        address ownerPrivateKey = vm.envAddress("OWNER_PRIVATE_KEY");
+        uint256 ownerPrivateKey = vm.envUint("OWNER_PRIVATE_KEY");
         address controller = vm.envAddress("CONTROLLER");
-        address controllerPrivateKey = vm.envAddress("CONTROLLER_PRIVATE_KEY");
+        uint256 controllerPrivateKey = vm.envUint("CONTROLLER_PRIVATE_KEY");
         address masterMinterAddress = vm.envAddress("MASTER_MINTER");
         uint256 allowance = vm.envUint("ALLOWANCE");
 
