@@ -133,13 +133,13 @@ contract ethereumTest is Test {
         uint256 defaultDailyLimit = omnibridge.dailyLimit(address(0));
         uint256 defaultExecutionDailyLimit = omnibridge.executionDailyLimit(address(0));
 
-        // reset default maxPerTx and executionMaxPerTx
+        // reset default dailyLimit and executionDailyLimit
         vm.startPrank(omnibridge.owner());
         omnibridge.setDailyLimit(address(0),defaultDailyLimit*10);
         omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit*10);
         vm.stopPrank();
 
-        // will not revert after default maxPerTx and executionMaxPerTx modified
+        // will not revert after default dailyLimit and executionDailyLimit modified
         for(uint8 i=1; i<24; i++){
             MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
             vm.startPrank(sender);
@@ -148,13 +148,13 @@ contract ethereumTest is Test {
             vm.stopPrank();
         }
 
-        // reset default maxPerTx and executionMaxPerTx
+        // reset default dailyLimit and executionDailyLimit
         vm.startPrank(omnibridge.owner());
         omnibridge.setDailyLimit(address(0),defaultDailyLimit+1e18);
         omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit+1e18);
         vm.stopPrank();
 
-        // will not revert after default maxPerTx and executionMaxPerTx modified
+        // will not revert after default dailyLimit and executionDailyLimit modified
         for(uint8 i=1; i<24; i++){
             MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
             vm.startPrank(sender);
