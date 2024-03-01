@@ -41,6 +41,9 @@
 1. Ethereum: `forge test --fork-url <ETH_RPC_URL> --match-path foundry_test/ethereumTest.t.sol  --no-match-test  test_relayTokens,test_receiveFromGC  -vvvv`
 2. Gnosis Chain: `forge test --fork-url https://rpc.gnosischain.com  --match-path foundry_test/gnosisTest.t.sol --no-match-test test_receiveFromEthereum,test_subsequentRelayTokenFromGnosis,test_submitSignatures  -vvvv`
 
+3. Testing tokens with different decimals.
+    `forge test --fork-url <ETH_RPC_URL>  --match-path foundry_test/ethereumTest.t.sol --match-test test_VariedDecimal  -vvvv` &     `forge test --fork-url https://rpc.gnosischain.com  --match-path foundry_test/gnosisTest.t.sol --match-test test_VariedDecimal  -vvvv`
+
 ## Key contracts
 
 1. EURC = 0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c

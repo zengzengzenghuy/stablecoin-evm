@@ -3,11 +3,12 @@ pragma experimental ABIEncoderV2;
 pragma solidity >=0.6.12 <0.9.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {IOmnibridge, IERC677} from "./contracts/IOmnibridge.sol";
-import {IAMB} from "./contracts/IAMB.sol";
-import {IBridgeValidators} from "./contracts/IBridgeValidators.sol";
+import {IOmnibridge, IERC677} from "./interface/IOmnibridge.sol";
+import {IAMB} from "./interface/IAMB.sol";
+import {IBridgeValidators} from "./interface/IBridgeValidators.sol";
 import {FiatTokenV2_2} from "../contracts/v2/FiatTokenV2_2.sol";
 import {FiatTokenProxy} from "../contracts/v1/FiatTokenProxy.sol";
+import {MockERC20} from "./contracts/MockERC20.sol";
 
 contract ethereumTest is Test {
 
@@ -58,8 +59,8 @@ contract ethereumTest is Test {
 
         // set new default maxPerTx and executionMaxPerTx to pass the _setLimits & _setExecutionLimits checks
         vm.startPrank(omnibridgeOwner);
-        omnibridge.setMaxPerTx(address(0),defaultMaxPerTx/100);
-        omnibridge.setExecutionMaxPerTx(address(0),defaultExecutionMaxPerTx/100);
+        omnibridge.setMaxPerTx(address(0),defaultMaxPerTx/1e15);
+        omnibridge.setExecutionMaxPerTx(address(0),defaultExecutionMaxPerTx/1e15);
         vm.stopPrank();
 
         // relay EURC
@@ -106,6 +107,62 @@ contract ethereumTest is Test {
         vm.stopPrank();
     }
 
+    function test_VariedDecimal() public {
+        string memory tokenName = "A token";
+        string memory tokenSymbol = "ABC";
+
+        // decimals less than 18 will cause revert error
+        // revert here: https://github.com/gnosischain/omnibridge/blob/master/contracts/upgradeable_contracts/components/common/TokensBridgeLimits.sol#L247
+        for(uint8 i=1; i<18; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender); // tokenName,tokenSymbol,initialSupply,decimal,receiver
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            vm.expectRevert();
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+        // decimals more than 18 will not revert
+        for(uint8 i=18; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+
+        uint256 defaultDailyLimit = omnibridge.dailyLimit(address(0));
+        uint256 defaultExecutionDailyLimit = omnibridge.executionDailyLimit(address(0));
+
+        // reset default maxPerTx and executionMaxPerTx
+        vm.startPrank(omnibridge.owner());
+        omnibridge.setDailyLimit(address(0),defaultDailyLimit*10);
+        omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit*10);
+        vm.stopPrank();
+
+        // will not revert after default maxPerTx and executionMaxPerTx modified
+        for(uint8 i=1; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+
+        // reset default maxPerTx and executionMaxPerTx
+        vm.startPrank(omnibridge.owner());
+        omnibridge.setDailyLimit(address(0),defaultDailyLimit+1e18);
+        omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit+1e18);
+        vm.stopPrank();
+
+        // will not revert after default maxPerTx and executionMaxPerTx modified
+        for(uint8 i=1; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+    }
 
     // ======================= Helper function =================================
     function setNewValidator() public {

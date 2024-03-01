@@ -10,7 +10,10 @@ interface IOmnibridge {
     function setMaxPerTx(address _token, uint256 _maxPerTx) external;
     function executionMaxPerTx(address _token) external view returns (uint256);
     function setExecutionMaxPerTx(address _token, uint256 _maxPerTx) external;
-
+    function dailyLimit(address _token) external view returns (uint256);
+    function setDailyLimit(address _token, uint256 _dailyLimit) external;
+    function executionDailyLimit(address _token) external view returns (uint256);
+    function setExecutionDailyLimit(address _token, uint256 _dailyLimit) external;
     function isTokenRegistered(address _token) external view returns (bool);
     function feeManager() external view returns(address);
 }

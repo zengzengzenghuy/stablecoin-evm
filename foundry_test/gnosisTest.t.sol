@@ -3,14 +3,15 @@ pragma experimental ABIEncoderV2;
 pragma solidity >=0.6.12 <0.9.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {IOmnibridge, IERC677} from "./contracts/IOmnibridge.sol";
-import {IOmnibridgeFeeManager} from "./contracts/IOmnibridgeFeeManager.sol";
+import {IOmnibridge, IERC677} from "./interface/IOmnibridge.sol";
+import {IOmnibridgeFeeManager} from "./interface/IOmnibridgeFeeManager.sol";
+import {IBridgeValidators} from "./interface/IBridgeValidators.sol";
+import {IAMB} from "./interface/IAMB.sol";
+import {IAMBBridgeHelper} from "./interface/IAMBBridgeHelper.sol";
 import {FiatTokenV2_2} from "../contracts/v2/FiatTokenV2_2.sol";
 import {FiatTokenProxy} from "../contracts/v1/FiatTokenProxy.sol";
 import {MasterMinter} from "../contracts/minting/MasterMinter.sol";
-import {IBridgeValidators} from "./contracts/IBridgeValidators.sol";
-import {IAMB} from "./contracts/IAMB.sol";
-import {IAMBBridgeHelper} from "./contracts/IAMBBridgeHelper.sol";
+import {MockERC20} from "./contracts/MockERC20.sol";
 
 contract gnosisTest is Test {
 
@@ -68,9 +69,10 @@ contract gnosisTest is Test {
         // To be replaced:
         // Replace this with the data you get after running ethereumTest.t.sol::test_relayTokens()
         // messageData from event UserRequestFromAffirmation.encodedData from ethereumTest.t.sol::test_relayTokens()
-        bytes memory messageData = hex'000500004ac82b41bd819dd871590b510316f2385cb196fb000000000002385388ad09518695c6c3712ac10a214be5109a655671f6a78083ca3e2a662d6dd1703c939c8ace2e268d001e848001010001642ae87cdd0000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c00000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000001dcd650000000000000000000000000000000000000000000000000000000000000000094575726f20436f696e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044555524300000000000000000000000000000000000000000000000000000000'; // required from ethereumTest.t.sol
+       // bytes memory messageData = hex'000500004ac82b41bd819dd871590b510316f2385cb196fb000000000002385388ad09518695c6c3712ac10a214be5109a655671f6a78083ca3e2a662d6dd1703c939c8ace2e268d001e848001010001642ae87cdd0000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c00000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000001dcd650000000000000000000000000000000000000000000000000000000000000000094575726f20436f696e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044555524300000000000000000000000000000000000000000000000000000000'; // required from ethereumTest.t.sol
+       bytes memory messageData = hex'000500004ac82b41bd819dd871590b510316f2385cb196fb000000000002385988ad09518695c6c3712ac10a214be5109a655671f6a78083ca3e2a662d6dd1703c939c8ace2e268d001e848001010001642ae87cdd0000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c00000000000000000000000000000000000000000000000000000000000000c000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000006000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000001dcd650000000000000000000000000000000000000000000000000000000000000000094575726f20436f696e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000044555524300000000000000000000000000000000000000000000000000000000';
         // messageId from event UserRequestFromAffirmation.messageId from ethereumTest.t.sol::test_relayTokens()
-        bytes32 messageId = 0x000500004ac82b41bd819dd871590b510316f2385cb196fb0000000000023853;
+        bytes32 messageId = 0x000500004ac82b41bd819dd871590b510316f2385cb196fb0000000000023859;
 
         address ForeignOmnibridge = vm.envAddress("FOREIGN_OMNIBRIDGE");
         uint256 amountToReceive = 500e6;
@@ -178,6 +180,63 @@ contract gnosisTest is Test {
         assertEq(eurcE.balanceOf(address(omnibridge)), omniBridgeBalanceBefore); // EURC is burn
 
     }
+     function test_VariedDecimal() public {
+        string memory tokenName = "A token";
+        string memory tokenSymbol = "ABC";
+
+        // decimals less than 18 will cause revert error
+        // revert here: https://github.com/gnosischain/omnibridge/blob/master/contracts/upgradeable_contracts/components/common/TokensBridgeLimits.sol#L247
+        for(uint8 i=1; i<18; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender); // tokenName,tokenSymbol,initialSupply,decimal,receiver
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            vm.expectRevert();
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+        // decimals more than 18 will not revert
+        for(uint8 i=18; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+
+        uint256 defaultDailyLimit = omnibridge.dailyLimit(address(0));
+        uint256 defaultExecutionDailyLimit = omnibridge.executionDailyLimit(address(0));
+
+        // reset default maxPerTx and executionMaxPerTx
+        vm.startPrank(omnibridge.owner());
+        omnibridge.setDailyLimit(address(0),defaultDailyLimit*10);
+        omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit*10);
+        vm.stopPrank();
+
+        // will not revert after default maxPerTx and executionMaxPerTx modified
+        for(uint8 i=1; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+
+        // reset default maxPerTx and executionMaxPerTx
+        vm.startPrank(omnibridge.owner());
+        omnibridge.setDailyLimit(address(0),defaultDailyLimit+1e18);
+        omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit+1e18);
+        vm.stopPrank();
+
+        // will not revert after default maxPerTx and executionMaxPerTx modified
+        for(uint8 i=1; i<24; i++){
+            MockERC20 token = new MockERC20(tokenName, tokenSymbol, 1e36, i, sender);
+            vm.startPrank(sender);
+            token.approve(address(omnibridge),1e36);
+            omnibridge.relayTokens(IERC677(address(token)),1e18);
+            vm.stopPrank();
+        }
+    }
+
 
     // ======================= Helper function =================================
     function setDefaultFee() public {
@@ -215,8 +274,8 @@ contract gnosisTest is Test {
         assertEq(false,omnibridge.isTokenRegistered(address(eurcE)));
 
 
-        omnibridge.setMaxPerTx(address(0),defaultMaxPerTx/100);
-        omnibridge.setExecutionMaxPerTx(address(0),defaultExecutionMaxPerTx/100);
+        omnibridge.setMaxPerTx(address(0),defaultMaxPerTx/1e15);
+        omnibridge.setExecutionMaxPerTx(address(0),defaultExecutionMaxPerTx/1e15);
         vm.stopPrank();
     }
 
