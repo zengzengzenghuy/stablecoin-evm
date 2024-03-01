@@ -80,9 +80,9 @@ contract ethereumTest is Test {
         relayFromETH(); // need to relay from ETH first in order to initialize the bridge limit
 
         // To be replaced: Value obtained after running gnosisTest.t.sol::test_subsequentRelayTokenFromGnosis()
-        bytes memory signatureFromGC = hex'011bce9a77a97b7c174cdd184389513e4be2ea20eeab1a3e811c1134856830d082fb452b24a7acadb7a7ab311a686e74b97fe04c3e96ab985def55e7e8e35c005fc5';
-        bytes memory messageFromGC = hex'00050000a7823d6f1e31569f51861e345b30c6bebf70ebe7000000000001455bf6a78083ca3e2a662d6dd1703c939c8ace2e268d88ad09518695c6c3712ac10a214be5109a655671000927c00101806401272255bb0000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000001dcd6500';
-        bytes32 messageId = 0x00050000a7823d6f1e31569f51861e345b30c6bebf70ebe7000000000001455b;
+        bytes memory signatureFromGC = hex'011b43417905e34b4c0f581dd4162ed6b84805e830ad8a3ae9707d3e499fd95338f035087628f01c6a0583690e0b68cb014928cd64ab1069a6a64d225b9ab8ca21f2';
+        bytes memory messageFromGC = hex'00050000a7823d6f1e31569f51861e345b30c6bebf70ebe700000000000145a4f6a78083ca3e2a662d6dd1703c939c8ace2e268d88ad09518695c6c3712ac10a214be5109a655671000927c00101806401272255bb0000000000000000000000001abaea1f7c830bd89acc67ec4af516284b1bc33c000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000001dcd6500';
+        bytes32 messageId = 0x00050000a7823d6f1e31569f51861e345b30c6bebf70ebe700000000000145a4;
 
 
         vm.prank(sender);
@@ -175,14 +175,14 @@ contract ethereumTest is Test {
 
 
     function setDefaultBridgeLimit() public {
-        address bridgeOwner = omnibridge.owner();
 
-        uint256 defaultMaxPerTx = omnibridge.maxPerTx(address(0));
-        uint256 defaultExecutionMaxPerTx = omnibridge.executionMaxPerTx(address(0));
+        uint256 defaultDailyLimit = omnibridge.dailyLimit(address(0));
+        uint256 defaultExecutionDailyLimit = omnibridge.executionDailyLimit(address(0));
 
-        vm.startPrank(bridgeOwner);
-        omnibridge.setMaxPerTx(address(0),defaultMaxPerTx/100);
-        omnibridge.setExecutionMaxPerTx(address(0),defaultExecutionMaxPerTx/100);
+        // reset default dailyLimit and executionDailyLimit
+        vm.startPrank(omnibridge.owner());
+        omnibridge.setDailyLimit(address(0),defaultDailyLimit*10);
+        omnibridge.setExecutionDailyLimit(address(0),defaultExecutionDailyLimit*10);
         vm.stopPrank();
     }
 
