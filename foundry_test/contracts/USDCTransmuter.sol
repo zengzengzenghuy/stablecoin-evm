@@ -17,6 +17,7 @@ contract USDCTransmuter is IERC20Receiver {
     IPermittableToken usdc;
     FiatTokenV2_2 usdce;
     address omnibridge;
+    address immutable USDC_ON_ETH = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
 
     constructor(address _usdc, address _usdce, address _omnibridge)public{
         usdc = IPermittableToken(_usdc);
@@ -36,7 +37,7 @@ contract USDCTransmuter is IERC20Receiver {
         uint256 value,
         bytes calldata data
     ) external override onlyOmnibridge{
-        require(token == address(usdc), "only USDC from Ethereum!");
+        require(token == USDC_ON_ETH, "only USDC from Ethereum!");
 
         // decode input data
         (address depositor) = abi.decode(data,(address));
@@ -56,7 +57,7 @@ contract USDCTransmuter is IERC20Receiver {
         require(usdc.transferFrom(depositor, address(this),amount), "failed to transfer!");
         // check if mint return true
         require(usdce.mint(depositor, amount),"failed to mint!");
-        emit Withdraw(depositor, amount);
+        emit Deposit(depositor, amount);
     }
 
     // deposit USDC and get USDC.e
@@ -67,15 +68,18 @@ contract USDCTransmuter is IERC20Receiver {
         require(usdc.transferFrom(msg.sender, address(this),amount), "failed to transfer!");
         // check if mint return true
         require(usdce.mint(msg.sender, amount),"failed to mint!");
-        emit Withdraw(msg.sender, amount);
+        emit Deposit(msg.sender, amount);
     }
 
     // withdraw USDC
     function withdraw (uint256 amount) external {
         require(depositAmount[msg.sender]>=amount && usdc.balanceOf(address(this))>=amount, "withdrawal amount exceeded!");
         depositAmount[msg.sender] -=amount;
+
         require(usdc.transfer(msg.sender,amount),"failed to transfer!");
+        usdce.transferFrom(msg.sender, address(this),amount);
         usdce.burn(amount);
+
         emit Withdraw(msg.sender, amount);
     }
 
@@ -84,6 +88,7 @@ contract USDCTransmuter is IERC20Receiver {
         require(depositAmount[withdrawer]>=amount && usdc.balanceOf(address(this))>=amount, "withdrawal amount exceeded!");
         depositAmount[withdrawer] -=amount;
         require(usdc.transfer(withdrawer,amount),"failed to transfer!");
+        usdce.transferFrom(withdrawer, address(this),amount);
         usdce.burn(amount);
         emit Withdraw(withdrawer, amount);
     }
