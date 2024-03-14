@@ -3,12 +3,12 @@ pragma experimental ABIEncoderV2;
 pragma solidity >=0.6.12 <0.9.0;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {IOmnibridge, IERC677} from "./interface/IOmnibridge.sol";
-import {IAMB} from "./interface/IAMB.sol";
-import {IBridgeValidators} from "./interface/IBridgeValidators.sol";
-import {FiatTokenV2_2} from "../contracts/v2/FiatTokenV2_2.sol";
-import {FiatTokenProxy} from "../contracts/v1/FiatTokenProxy.sol";
-import {MockERC20} from "./contracts/MockERC20.sol";
+import {IOmnibridge, IERC677} from "../interface/IOmnibridge.sol";
+import {IAMB} from "../interface/IAMB.sol";
+import {IBridgeValidators} from "../interface/IBridgeValidators.sol";
+import {FiatTokenV2_2} from "../../contracts/v2/FiatTokenV2_2.sol";
+import {FiatTokenProxy} from "../../contracts/v1/FiatTokenProxy.sol";
+import {MockERC20} from "../contracts/MockERC20.sol";
 
 contract ethereumTest is Test {
 
