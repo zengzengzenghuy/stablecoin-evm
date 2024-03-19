@@ -2,12 +2,12 @@ pragma solidity >=0.6.0;
 
 interface IOmnibridge {
     function relayTokens(IERC677 token,uint256 _value) external;
+    function relayTokens(IERC677 token, address _receiver,uint256 _value) external;
     function relayTokensAndCall(IERC677 token,address _receiver, uint256 _value,bytes memory _data) external;
     function setCustomTokenAddressPair(address _nativeToken, address _bridgedToken) external;
 
     function owner() external view returns (address);
     function maxPerTx(address _token) external view returns (uint256);
-    function minPerTx(address _token) external view returns (uint256);
     function setMaxPerTx(address _token, uint256 _maxPerTx) external;
     function executionMaxPerTx(address _token) external view returns (uint256);
     function setExecutionMaxPerTx(address _token, uint256 _maxPerTx) external;
@@ -17,8 +17,6 @@ interface IOmnibridge {
     function setExecutionDailyLimit(address _token, uint256 _dailyLimit) external;
     function isTokenRegistered(address _token) external view returns (bool);
     function feeManager() external view returns(address);
-    function getCurrentDay() external view returns (uint256);
-    function totalSpentPerDay(address _token, uint256 _day) external view returns (uint256);
 }
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

@@ -9,8 +9,8 @@ import {IAMB} from "../interface/IAMB.sol";
 import {IBridgeValidators} from "../interface/IBridgeValidators.sol";
 import {FiatTokenV2_2} from "../../contracts/v2/FiatTokenV2_2.sol";
 import {FiatTokenProxy} from "../../contracts/v1/FiatTokenProxy.sol";
-import {USDCTransmuter} from "../contracts/USDCTransmuter.sol";
-import {IPermittableToken} from "../interface/IPermittableToken.sol";
+import {USDCTransmuter} from "../../contracts/USDCTransmuter.sol";
+import {IPermittableToken} from "../../contracts/interface/IPermittableToken.sol";
 import {MasterMinter} from "../../contracts/minting/MasterMinter.sol";
 
 contract USDCTransmuterTest is Test {
@@ -19,49 +19,52 @@ contract USDCTransmuterTest is Test {
     FiatTokenV2_2 usdce;
     MasterMinter masterMinter;
     address depositor;
+    uint256 minterAllowance;
 
     function setUp() public {
-        usdc = IPermittableToken(0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83); // USDC on Gnosis
-        usdce = FiatTokenV2_2(0x906cce67ff158893D982C681aBFA1EE845C23eDc); //USDC.e on Gnosis
-        address omnibridge = 0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d;
-
-        address owner = 0x458cD345B4C05e8DF39d0A07220feb4Ec19F5e6f;
-        masterMinter = MasterMinter(0x55715Acb53a53332Fc2EBEC4a4ce50ab6086C4E0);
-
-        usdcTransmuter = new USDCTransmuter(address(usdc), address(usdce), omnibridge);
+        usdc = IPermittableToken(vm.envAddress("USDC_ON_GNO")); // USDC on Gnosis
+        usdce = FiatTokenV2_2(vm.envAddress("USDCE")); //USDC.e on Gnosis
+        address omnibridge = vm.envAddress("HOME_OMNIBRIDGE");
+        masterMinter = MasterMinter(vm.envAddress("USDCE_MASTER_MINTER"));
+        address masterMinterOwner = masterMinter.owner();
         depositor = makeAddr("depositor");
-        deal(address(usdc),depositor, 1e10);
+        usdcTransmuter = new USDCTransmuter(address(usdce), omnibridge);
+        minterAllowance = 1e20;
 
-        assertEq(usdc.balanceOf(depositor), 1e10);
+
         // configure minter
-        vm.startPrank(owner);
+        vm.startPrank(masterMinterOwner);
 
-        masterMinter.configureController(owner, address(usdcTransmuter));
-        masterMinter.configureMinter(1e20);
+        masterMinter.configureController(masterMinterOwner, address(usdcTransmuter));
+        masterMinter.configureMinter(minterAllowance);
 
         vm.stopPrank();
 
     }
 
+
     function test_deposit() public {
+
         uint256 amount = 1e10;
-            assertEq(usdc.balanceOf(depositor),amount);
+        // "mint" USDC on Gnosis to depositor
+        deal(address(usdc),depositor, amount);
+        assertEq(usdc.balanceOf(depositor),amount);
 
-            vm.startPrank(depositor);
+        vm.startPrank(depositor);
 
-            usdc.approve(address(usdcTransmuter),amount);
-            usdcTransmuter.deposit(amount);
+        usdc.approve(address(usdcTransmuter),amount);
+        usdcTransmuter.deposit(amount);
 
-            vm.stopPrank();
+        vm.stopPrank();
 
-            assertEq(usdc.balanceOf(address(usdcTransmuter)),amount);
-            assertEq(usdce.balanceOf(depositor),amount);
+        assertEq(usdc.balanceOf(address(usdcTransmuter)),amount);
+        assertEq(usdce.balanceOf(depositor),amount);
 
     }
 
     function testFuzz_deposit(uint256 amount) public{
         // amount > 0 , amount < minterAllowance
-        vm.assume(amount > 0 && amount <1e20);
+        vm.assume(amount > 0 && amount <minterAllowance);
         deal(address(usdc),depositor, amount);
 
 
@@ -77,38 +80,39 @@ contract USDCTransmuterTest is Test {
     }
 
     function test_withdrawal() public {
-            vm.startPrank(depositor);
+        uint256 amount = 1e10;
+        // "mint" USDC on Gnosis to depositor
+        deal(address(usdc),depositor, amount);
+        vm.startPrank(depositor);
 
-            usdc.approve(address(usdcTransmuter),1e10);
-            usdcTransmuter.deposit(1e10);
-            usdce.approve(address(usdcTransmuter),1e8);
-            usdcTransmuter.withdraw(1e8);
+        usdc.approve(address(usdcTransmuter),1e10);
+        usdcTransmuter.deposit(1e10);
+        usdce.approve(address(usdcTransmuter),1e8);
+        usdcTransmuter.withdraw(1e8);
 
-            vm.stopPrank();
+        vm.stopPrank();
 
-            assertEq(usdc.balanceOf(depositor),1e8);
-            assertEq(usdce.balanceOf(depositor),1e10-1e8);
-            assertEq(usdc.balanceOf(address(usdcTransmuter)),1e10-1e8);
-
-    }
-        function testFuzz_withdrawal(uint256 depositAmount, uint256 withdrawAmount) public {
-            vm.assume(depositAmount > 0 && depositAmount <1e20 && withdrawAmount > 0 && withdrawAmount <= depositAmount);
-            deal(address(usdc),depositor, depositAmount);
-            vm.startPrank(depositor);
-
-            usdc.approve(address(usdcTransmuter),depositAmount);
-            usdcTransmuter.deposit(depositAmount);
-            usdce.approve(address(usdcTransmuter),withdrawAmount);
-            usdcTransmuter.withdraw(withdrawAmount);
-
-            vm.stopPrank();
-
-            assertEq(usdc.balanceOf(depositor),withdrawAmount);
-            assertEq(usdce.balanceOf(depositor),depositAmount-withdrawAmount);
-            assertEq(usdc.balanceOf(address(usdcTransmuter)),depositAmount-withdrawAmount);
+        assertEq(usdc.balanceOf(depositor),1e8);
+        assertEq(usdce.balanceOf(depositor),1e10-1e8);
+        assertEq(usdc.balanceOf(address(usdcTransmuter)),1e10-1e8);
 
     }
+    function testFuzz_withdrawal(uint256 depositAmount, uint256 withdrawAmount) public {
+        vm.assume(depositAmount > 0 && depositAmount <1e20 && withdrawAmount > 0 && withdrawAmount <= depositAmount);
+        deal(address(usdc),depositor, depositAmount);
+        vm.startPrank(depositor);
 
+        usdc.approve(address(usdcTransmuter),depositAmount);
+        usdcTransmuter.deposit(depositAmount);
+        usdce.approve(address(usdcTransmuter),withdrawAmount);
+        usdcTransmuter.withdraw(withdrawAmount);
 
+        vm.stopPrank();
+
+        assertEq(usdc.balanceOf(depositor),withdrawAmount);
+        assertEq(usdce.balanceOf(depositor),depositAmount-withdrawAmount);
+        assertEq(usdc.balanceOf(address(usdcTransmuter)),depositAmount-withdrawAmount);
+
+    }
 
 }
