@@ -25,7 +25,7 @@ contract ethereumTest is Test {
         omnibridge = IOmnibridge(vm.envAddress("FOREIGN_OMNIBRIDGE"));
         amb = IAMB(vm.envAddress("FOREIGN_AMB"));
         bridgeValidators = IBridgeValidators(vm.envAddress("FOREIGN_VALIDATOR_CONTRACT"));
-        sender = 0xD6153F5af5679a75cC85D8974463545181f48772; // USDC holder on Ethereum
+        sender = 0xD6153F5af5679a75cC85D8974463545181f48772; // USDC holder on Ethereum, for testing only
         testValidator = vm.envAddress("VALIDATOR_ADDRESS");
         usdc = IERC20(vm.envAddress("USDC_ON_ETH"));
         usdcTransmuter = vm.envAddress("USDC_TRANSMUTER");
@@ -72,10 +72,10 @@ contract ethereumTest is Test {
 
     function test_receiveFromGC() public {
         // TODO: get signature from ambHelper.getSignature()
-        bytes memory signatureFromGC = hex'011c7419e23af51e5266c52f8c992999f4ffe2cd2abe2d8bcf89d9cad16f9cf23b310aec1e0f1fb409c26ae3d6223a69bbf6d246ee4db839d08aaab232a8d598fc58';
+        bytes memory signatureFromGC = hex'011ca181b6a6dafe1104108613aa4bd986ef3e929fd7bf6ea0620683c9487f8d8030050ed43c18f099324d672d873ab95146876083b0d199b40ad3c0778f6f9761e1';
         // TODO: get messageData(encodedData) and messageId from event UserRequestFromSignature
-        bytes memory messageFromGC = hex'00050000a7823d6f1e31569f51861e345b30c6bebf70ebe70000000000014938f6a78083ca3e2a662d6dd1703c939c8ace2e268d88ad09518695c6c3712ac10a214be5109a655671000927c00101806401272255bb000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc35681000000000000000000000000000000000000000000000000000000000000090c';
-        bytes32 messageId =0x00050000a7823d6f1e31569f51861e345b30c6bebf70ebe70000000000014938;
+        bytes memory messageFromGC = hex'00050000a7823d6f1e31569f51861e345b30c6bebf70ebe70000000000014ca2f6a78083ca3e2a662d6dd1703c939c8ace2e268d88ad09518695c6c3712ac10a214be5109a655671000927c00101806401272255bb000000000000000000000000a0b86991c6218b36c1d19d4a2e9eb0ce3606eb48000000000000000000000000cd1722f3947def4cf144679da39c4c32bdc356810000000000000000000000000000000000000000000000000000000005f5e100';
+        bytes32 messageId =0x00050000a7823d6f1e31569f51861e345b30c6bebf70ebe70000000000014ca2;
 
         vm.prank(sender);
         vm.expectEmit(address(amb));

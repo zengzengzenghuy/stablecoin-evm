@@ -6,7 +6,7 @@ import "forge-std/Script.sol";
 import {USDCTransmuter} from "../contracts/USDCTransmuter.sol";
 
 
-contract DeployProxyAndMinter is Script {
+contract DeployUSDCTransmuter is Script {
     event NewContract(address newContract);
     function run() external {
         address usdce = vm.envAddress("USDCE");

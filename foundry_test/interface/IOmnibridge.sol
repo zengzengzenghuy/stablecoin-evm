@@ -2,6 +2,7 @@ pragma solidity >=0.6.0;
 
 interface IOmnibridge {
     function relayTokens(IERC677 token,uint256 _value) external;
+    function relayTokens(IERC677 token, address _receiver,uint256 _value) external;
     function relayTokensAndCall(IERC677 token,address _receiver, uint256 _value,bytes memory _data) external;
     function setCustomTokenAddressPair(address _nativeToken, address _bridgedToken) external;
 
