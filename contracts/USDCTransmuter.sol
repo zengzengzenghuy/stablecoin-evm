@@ -12,6 +12,10 @@ interface IERC20Receiver {
         bytes calldata data
     ) external;
 }
+
+/// @title USDCTransmuter contract
+/// @author zeng
+/// @notice This contract allows user to swap between USDC.e and USDC on xDAI, bridge USDC on ETH <-> USDC.e on GC
 contract USDCTransmuter is IERC20Receiver, ReentrancyGuard {
 
     event Withdraw(address indexed depositor, uint256 indexed amount);
@@ -28,8 +32,11 @@ contract USDCTransmuter is IERC20Receiver, ReentrancyGuard {
     }
 
 
-    // called by Omnibridge after minting token for Transmuter
-    // mint USDC.e to depositor
+    /// @notice called by Omnibridge when USDC is bridged from ETH
+    /// @dev USDC on xDAI is locked to this contract, and mint equivalent amount of USDC.e to depositor
+    /// @param token USDC on xDAI address
+    /// @param value amount of USDC.e to mint
+    /// @param data data from relayTokensAndCall (depositor address)
     function onTokenBridged(
         address token,
         uint256 value,
@@ -47,8 +54,10 @@ contract USDCTransmuter is IERC20Receiver, ReentrancyGuard {
 
     }
 
-
-    // called by user who wants to send USDC.e from GnosisChain, and receive USDC on Ethereum
+    /// @notice send USDC.e from GnosisChain, and receive USDC on Ethereum
+    /// @dev USDC.e is burn from this contract, and USDC on xDA is relayed.
+    /// @param receiverOnETH receiver of USDC on Ethereum
+    /// @param amount amount of USDC.e to bridge
     function bridgeUSDCE(address receiverOnETH, uint256 amount) external nonReentrant{
         require(receiverOnETH!=address(0) && amount!=0, "invalid address or amount");
 
@@ -59,12 +68,16 @@ contract USDCTransmuter is IERC20Receiver, ReentrancyGuard {
 
     }
 
-    // deposit USDC and get USDC.e
+    /// @notice deposit USDC on xDAI and get USDC.e
+    /// @dev USDC on xDAI is transferred into this contract, and USDC.e is minted to msg.sender
+    /// @param amount amount of USDC on xDAI to deposit into this contract
     function deposit(uint256 amount) external nonReentrant{
         _deposit(msg.sender, amount);
     }
 
-    // withdraw USDC
+    /// @notice send USDC.e and withdraw USDC on xDAI from this contract
+    /// @dev USDc.e is transferred and burn from this contract, USDC on xDAI is transferred to msg.sender
+    /// @param amount amount of USDC on xDAI to withdraw
     function withdraw (uint256 amount) external nonReentrant{
         _withdraw(msg.sender, amount);
     }
