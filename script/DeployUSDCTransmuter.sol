@@ -9,11 +9,10 @@ contract DeployUSDCTransmuter is Script {
     event NewContract(address newContract);
 
     function run() external {
-        address usdce = vm.envAddress("USDCE");
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
 
         vm.startBroadcast(deployerPrivateKey);
-        USDCTransmuter usdcTransmuter = new USDCTransmuter(usdce);
+        USDCTransmuter usdcTransmuter = new USDCTransmuter();
         emit NewContract(address(usdcTransmuter));
         vm.stopBroadcast();
     }

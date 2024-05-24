@@ -22,15 +22,17 @@ contract USDCTransmuterTest is Test {
     MasterMinter masterMinter;
     address depositor;
     uint256 minterAllowance;
+    address owner;
 
     function setUp() public {
-        usdc = IPermittableToken(vm.envAddress("USDC_ON_GNO")); // USDC on Gnosis
+        usdc = IPermittableToken(vm.envAddress("USDC_ON_GNO")); // USDC on xDAI
         usdce = FiatTokenV2_2(vm.envAddress("USDCE")); //USDC.e on Gnosis
-        address omnibridge = vm.envAddress("HOME_OMNIBRIDGE");
         masterMinter = MasterMinter(vm.envAddress("USDCE_MASTER_MINTER"));
         address masterMinterOwner = masterMinter.owner();
         depositor = makeAddr("depositor");
-        usdcTransmuter = new USDCTransmuter(address(usdce), omnibridge);
+        owner = makeAddr("owner");
+        vm.prank(owner);
+        usdcTransmuter = new USDCTransmuter();
         minterAllowance = 1e20;
 
         // configure minter
@@ -47,7 +49,7 @@ contract USDCTransmuterTest is Test {
 
     function test_deposit() public {
         uint256 amount = 1e10;
-        // "mint" USDC on Gnosis to depositor
+        // "mint" USDC.e to depositor
         deal(address(usdc), depositor, amount);
         assertEq(usdc.balanceOf(depositor), amount);
 
@@ -80,7 +82,7 @@ contract USDCTransmuterTest is Test {
 
     function test_withdrawal() public {
         uint256 amount = 1e10;
-        // "mint" USDC on Gnosis to depositor
+        // transfer USDC on xDAI to depositor
         deal(address(usdc), depositor, amount);
         vm.startPrank(depositor);
 
@@ -121,5 +123,83 @@ contract USDCTransmuterTest is Test {
             usdc.balanceOf(address(usdcTransmuter)),
             depositAmount - withdrawAmount
         );
+    }
+
+    function test_disable() public {
+        assertEq(
+            usdcTransmuter.isEnabled(),
+            true,
+            "Transmuter is not enabled!"
+        );
+        vm.expectRevert();
+        usdcTransmuter.disableTransmuter();
+
+        vm.prank(owner);
+        usdcTransmuter.disableTransmuter();
+        assertEq(
+            usdcTransmuter.isEnabled(),
+            false,
+            "Transmuter is not disabled!"
+        );
+    }
+
+    function test_afterDisabled() public {
+        // first deposit $amount of usdc
+        uint256 amount = 1e10;
+        // "mint" USDC.e to depositor
+        deal(address(usdc), depositor, 2 * amount);
+
+        vm.startPrank(depositor);
+        usdc.approve(address(usdcTransmuter), amount);
+        usdcTransmuter.deposit(amount);
+        vm.stopPrank();
+
+        // disabled transmuter
+        vm.prank(owner);
+        usdcTransmuter.disableTransmuter();
+
+        // should revert on deposit()
+        vm.startPrank(depositor);
+
+        usdc.approve(address(usdcTransmuter), amount);
+        vm.expectRevert();
+        usdcTransmuter.deposit(amount);
+
+        // should revert on withdraw()
+        usdce.approve(address(usdcTransmuter), amount);
+        vm.expectRevert();
+        usdcTransmuter.withdraw(amount);
+
+        vm.stopPrank();
+
+        // user should still hold the same balance as before
+        assertEq(usdce.balanceOf(depositor), amount, "mismatch balance");
+        assertEq(usdc.balanceOf(depositor), amount, "mismatch balance");
+    }
+
+    function test_burn() public {
+        // deposit $amount into Transmuter first
+        uint256 amount = 1e10;
+        // "mint" USDC.e to depositor
+        deal(address(usdc), depositor, 2 * amount);
+        vm.startPrank(depositor);
+        usdc.approve(address(usdcTransmuter), amount);
+        usdcTransmuter.deposit(amount);
+        vm.stopPrank();
+
+        uint256 balanceBefore = usdc.balanceOf(address(usdcTransmuter));
+        assertEq(balanceBefore, amount, "incorrect USDC balance of transmuter");
+
+        // should revert if not owner
+        vm.prank(depositor);
+        vm.expectRevert();
+        usdcTransmuter.burnLockedUSDC();
+
+        // should work only If owner
+        vm.prank(owner);
+        usdcTransmuter.burnLockedUSDC();
+
+        uint256 balanceAfter = usdc.balanceOf(address(usdcTransmuter));
+        assertEq(balanceAfter, 0, "USDC is not burned properly");
     }
 }
