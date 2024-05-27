@@ -7,6 +7,7 @@ import {
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { FiatTokenV2_2 } from "./v2/FiatTokenV2_2.sol";
 import { IPermittableToken } from "./interface/IPermittableToken.sol";
+import { IOmnibridge, IERC677 } from "./interface/IOmnibridge.sol";
 
 /// @title USDCTransmuter contract
 /// @author gnosis chain
@@ -15,17 +16,20 @@ contract USDCTransmuter is ReentrancyGuard, Ownable {
     event Withdraw(address indexed depositor, uint256 indexed amount);
     event Deposit(address indexed depositor, uint256 indexed amount);
 
-    IPermittableToken public usdc;
-    FiatTokenV2_2 public usdce;
+    IPermittableToken usdc;
+    FiatTokenV2_2 usdce;
+    IOmnibridge homeOmnibridge;
     // USDC created by Omnibridge
     address public USDC_ON_XDAI = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83;
     // Circle's standard USDC
     address public USDC_E = 0x2a22f9c3b484c3629090FeED35F17Ff8F88f76F0;
+    address public HOME_OMNIBRIDGE = 0xf6A78083ca3e2a662D6dd1703c939c8aCE2e268d;
     bool public isEnabled;
 
     constructor() public {
         usdc = IPermittableToken(USDC_ON_XDAI);
         usdce = FiatTokenV2_2(USDC_E);
+        homeOmnibridge = IOmnibridge(HOME_OMNIBRIDGE);
         isEnabled = true;
     }
 
@@ -50,10 +54,13 @@ contract USDCTransmuter is ReentrancyGuard, Ownable {
         isEnabled = false;
     }
 
-    /// @notice Burn the locked USDC in the contract
-    function burnLockedUSDC() external onlyOwner {
+    /// @notice bridge the locked USDC on xDAI in Transmuter contract and send it to $address
+    ///         receiver suppose to be Circle address or 0 address
+    /// @param receiver address that will receive USDC on ETH
+    function rebalanceUSDC(address receiver) external onlyOwner {
         uint256 amount = usdc.balanceOf(address(this));
-        usdc.burn(amount);
+        usdc.approve(HOME_OMNIBRIDGE, amount);
+        homeOmnibridge.relayTokens(IERC677(USDC_ON_XDAI), receiver, amount);
     }
 
     function _withdraw(address withdrawer, uint256 amount) internal {

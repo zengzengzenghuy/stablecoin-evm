@@ -177,11 +177,11 @@ contract USDCTransmuterTest is Test {
         assertEq(usdc.balanceOf(depositor), amount, "mismatch balance");
     }
 
-    function test_burn() public {
+    function test_rebalance() public {
         // deposit $amount into Transmuter first
         uint256 amount = 1e10;
         // "mint" USDC.e to depositor
-        deal(address(usdc), depositor, 2 * amount);
+        deal(address(usdc), depositor, amount);
         vm.startPrank(depositor);
         usdc.approve(address(usdcTransmuter), amount);
         usdcTransmuter.deposit(amount);
@@ -193,13 +193,13 @@ contract USDCTransmuterTest is Test {
         // should revert if not owner
         vm.prank(depositor);
         vm.expectRevert();
-        usdcTransmuter.burnLockedUSDC();
+        usdcTransmuter.rebalanceUSDC(owner);
 
         // should work only If owner
         vm.prank(owner);
-        usdcTransmuter.burnLockedUSDC();
+        usdcTransmuter.rebalanceUSDC(owner);
 
         uint256 balanceAfter = usdc.balanceOf(address(usdcTransmuter));
-        assertEq(balanceAfter, 0, "USDC is not burned properly");
+        assertEq(balanceAfter, 0, "USDC is not relayed properly");
     }
 }
