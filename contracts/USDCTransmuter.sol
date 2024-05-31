@@ -9,10 +9,25 @@ import { FiatTokenV2_2 } from "./v2/FiatTokenV2_2.sol";
 import { IPermittableToken } from "./interface/IPermittableToken.sol";
 import { IOmnibridge, IERC677 } from "./interface/IOmnibridge.sol";
 
+/// @title IERC20Receiver
+interface IERC20Receiver {
+    /// @notice callback function that will receive USDC on xDAI and mint USDC.e to receiver
+    /// @dev relayTokensAndCall is called from Ethereum, with token receiver encoded in data
+    /// @dev token receiver need to be decoded and mint $value of USDC.e to receiver
+    /// @param token USDC on xDAI
+    /// @param value amount of USDC on xDAI relayed
+    /// @param data data from relayTokensAndCall
+    function onTokenBridged(
+        address token,
+        uint256 value,
+        bytes calldata data
+    ) external;
+}
+
 /// @title USDCTransmuter contract
 /// @author gnosis chain
 /// @notice This contract allows user to swap between USDC.e and USDC on xDAI
-contract USDCTransmuter is ReentrancyGuard, Ownable {
+contract USDCTransmuter is ReentrancyGuard, Ownable, IERC20Receiver {
     event Withdraw(address indexed depositor, uint256 indexed amount);
     event Deposit(address indexed depositor, uint256 indexed amount);
 
@@ -31,6 +46,23 @@ contract USDCTransmuter is ReentrancyGuard, Ownable {
         usdce = FiatTokenV2_2(USDC_E);
         homeOmnibridge = IOmnibridge(HOME_OMNIBRIDGE);
         isEnabled = true;
+    }
+
+    /// @inheritdoc	IERC20Receiver
+    function onTokenBridged(
+        address token,
+        uint256 value,
+        bytes calldata data
+    ) external override {
+        require(msg.sender == HOME_OMNIBRIDGE, "only Omnibridge!");
+        require(token == USDC_ON_XDAI, "only USDC from Omnibridge!");
+
+        // decode input data
+        address receiver = abi.decode(data, (address));
+        require(receiver != address(0), "invalid depositor address");
+
+        require(usdce.mint(receiver, value), "fail to mint");
+        emit Deposit(receiver, value);
     }
 
     /// @notice deposit USDC on xDAI and get USDC.e

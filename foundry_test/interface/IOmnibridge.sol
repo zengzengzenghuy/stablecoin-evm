@@ -55,6 +55,8 @@ interface IOmnibridge {
         external
         view
         returns (uint256);
+
+    function mediatorBalance(address _token) external view returns (uint256);
 }
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

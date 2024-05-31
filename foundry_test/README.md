@@ -81,20 +81,16 @@ Folder: `/EURC_test`
 
 # USDC End to end test
 
-For USDC end to end test, please check
-[omnibridge repo](https://github.com/zengzengzenghuy/omnibridge/tree/feat/usdc_upgrade/usdc_test)
+```
+cd USDC_test
+chmod +x e2e.sh
+./e2e.sh
+
+```
 
 ## Unit Test
 
-1. `forge test --match-path foundry_test/USDC_test/USDCTransmuter.t.sol --fork-url https://rpc.gnosischain.com -vvvv`
-
-## Key contracts
-
-1. USDC_TRANSMUTER (GC) = 0xaC70AD689297ac155B81Cd092AC5c98657743A12
-2. USDC.e (GC) = 0x906cce67ff158893D982C681aBFA1EE845C23eDc
-3. USDC (ETH) = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48
-4. USDC (GC) = 0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83
-5. USDCE_MASTER_MINTER (GC) = 0x55715Acb53a53332Fc2EBEC4a4ce50ab6086C4E0
+1. `forge test --match-contract USDCTransmuterTest --rpc-url $GNOSIS_RPC_URL -v`
 
 ## Workflow
 
